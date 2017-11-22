@@ -15,25 +15,25 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 public class WordCount
 {
     public static class Map extends Mapper<Object, Text, Text, IntWritable>
     {
-        private final static IntWritable rating = new IntWritable(1);
+        private final static IntWritable one = new IntWritable(1);
         private Text word = new Text();
         public void map(Object key, Text value, Context context)
                 throws IOException, InterruptedException
         {
-            String itr = new String(value.toString());
-
-            String[] line = itr.split("\\^");
-                if(line[3].length()> 0 &&  line[4].length() > 0){
-                    IntWritable rating = new IntWritable(Integer.parseInt(line[4]));
-                    Text bussinessId  = new Text();
-                    bussinessId.set(line[3]);
-                    context.write(bussinessId, rating);
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while (itr.hasMoreTokens()) {
+                String line = itr.nextToken("\\^");
+                if (line.contains("Palo Alto")) {
+                    word.set(line);
+                    context.write(word, one);
                 }
+            }
         }
     }
 
@@ -45,13 +45,11 @@ public class WordCount
                 throws IOException, InterruptedException
         {
             int sum = 0;
-            int count = 0;
             for (IntWritable val : values)
             {
                 sum += val.get();
-                count++;
             }
-            result.set(sum/count);
+            result.set(sum);
             context.write(key, result);
         }
     }
